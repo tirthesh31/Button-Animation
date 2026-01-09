@@ -80,7 +80,14 @@ function initFHAnimate() {
 
         case 'wave':
           if (isEnter) {
-            gsap.to(targets, {
+
+            // Kill any existing wave tween (safety)
+            if (el._fhWaveTween) {
+              el._fhWaveTween.kill();
+            }
+
+            // Create & store infinite wave tween
+            el._fhWaveTween = gsap.to(targets, {
               y: -distance,
               duration,
               ease: 'sine.inOut',
@@ -90,7 +97,16 @@ function initFHAnimate() {
                 repeat: -1
               }
             });
+
           } else {
+
+            // Kill infinite wave animation
+            if (el._fhWaveTween) {
+              el._fhWaveTween.kill();
+              el._fhWaveTween = null;
+            }
+
+            // Animate back to default state
             gsap.to(targets, {
               y: 0,
               duration,
