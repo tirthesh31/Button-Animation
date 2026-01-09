@@ -14,8 +14,7 @@ function initFHAnimate() {
     if (el.dataset.fhInit) return;
     el.dataset.fhInit = 'true';
 
-    // Read attributes OR fallback to defaults
-    const animation = el.getAttribute('fh-animate');
+    const type = el.getAttribute('fh-animate');
     const trigger = el.getAttribute('fh-trigger') || DEFAULTS.trigger;
     const distance = parseFloat(el.getAttribute('fh-distance')) || DEFAULTS.distance;
     const opacity = parseFloat(el.getAttribute('fh-opacity')) || DEFAULTS.opacity;
@@ -34,80 +33,103 @@ function initFHAnimate() {
       return span;
     });
 
-    const run = () => runAnimation(animation, chars);
-    const reset = () => gsap.to(chars, { clearProps: 'all' });
+    const enter = () => animate(type, chars, 'enter');
+    const exit = () => animate(type, chars, 'exit');
 
     if (trigger === 'hover') {
-      el.addEventListener('mouseenter', run);
-      el.addEventListener('mouseleave', reset);
-    } 
-    else if (trigger === 'click') {
-      el.addEventListener('click', run);
-    } 
-    else if (trigger === 'load') {
-      run();
+      el.addEventListener('mouseenter', enter);
+      el.addEventListener('mouseleave', exit);
+    } else if (trigger === 'click') {
+      el.addEventListener('click', enter);
+    } else if (trigger === 'load') {
+      enter();
     }
 
-    function runAnimation(type, targets) {
-      switch (type) {
+    function animate(name, targets, direction) {
+      const isEnter = direction === 'enter';
+
+      switch (name) {
 
         case 'stagger-up':
-          gsap.fromTo(targets,
-            { y: 0 },
-            { y: -distance, opacity, duration, ease, stagger: delayStep }
-          );
-          break;
-
-        case 'stagger-down':
-          gsap.fromTo(targets,
-            { y: 0 },
-            { y: distance, opacity, duration, ease, stagger: delayStep }
-          );
-          break;
-
-        case 'fade':
-          gsap.fromTo(targets,
-            { opacity: 0.3 },
-            { opacity, duration, stagger: delayStep }
-          );
-          break;
-
-        case 'wave':
           gsap.to(targets, {
-            y: -distance,
+            y: isEnter ? -distance : 0,
+            opacity: isEnter ? opacity : 1,
             duration,
-            ease: 'sine.inOut',
-            stagger: {
-              each: delayStep,
-              yoyo: true,
-              repeat: -1
-            }
+            ease,
+            stagger: delayStep
           });
           break;
 
+        case 'stagger-down':
+          gsap.to(targets, {
+            y: isEnter ? distance : 0,
+            opacity: isEnter ? opacity : 1,
+            duration,
+            ease,
+            stagger: delayStep
+          });
+          break;
+
+        case 'fade':
+          gsap.to(targets, {
+            opacity: isEnter ? opacity : 1,
+            duration,
+            stagger: delayStep
+          });
+          break;
+
+        case 'wave':
+          if (isEnter) {
+            gsap.to(targets, {
+              y: -distance,
+              duration,
+              ease: 'sine.inOut',
+              stagger: {
+                each: delayStep,
+                yoyo: true,
+                repeat: -1
+              }
+            });
+          } else {
+            gsap.to(targets, {
+              y: 0,
+              duration,
+              ease,
+              stagger: delayStep
+            });
+          }
+          break;
+
         case 'rotate':
-          gsap.fromTo(targets,
-            { rotate: 0 },
-            { rotate: 8, duration, ease, stagger: delayStep }
-          );
+          gsap.to(targets, {
+            rotate: isEnter ? 8 : 0,
+            duration,
+            ease,
+            stagger: delayStep
+          });
           break;
 
         case 'slide-left':
-          gsap.fromTo(targets,
-            { x: distance },
-            { x: 0, opacity, duration, ease, stagger: delayStep }
-          );
+          gsap.to(targets, {
+            x: isEnter ? 0 : distance,
+            opacity: isEnter ? opacity : 1,
+            duration,
+            ease,
+            stagger: delayStep
+          });
           break;
 
         case 'scale-pop':
-          gsap.fromTo(targets,
-            { scale: 1 },
-            { scale: 1.25, duration, ease, stagger: delayStep }
-          );
+          gsap.to(targets, {
+            scale: isEnter ? 1.25 : 1,
+            duration,
+            ease,
+            stagger: delayStep
+          });
           break;
 
         default:
-          console.warn(`FH animation "${type}" not found`);
+          console.warn(`FH animation "${name}" not found`);
       }
     }
   });
